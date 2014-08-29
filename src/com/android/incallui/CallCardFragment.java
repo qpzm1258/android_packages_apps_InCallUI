@@ -44,6 +44,9 @@ import android.widget.TextView;
 import com.android.services.telephony.common.AudioMode;
 import com.android.services.telephony.common.Call;
 
+import android.mokee.location.PhoneLocation;
+import android.mokee.util.MoKeeUtils;
+
 import java.util.List;
 
 /**
@@ -248,6 +251,39 @@ public class CallCardFragment extends BaseFragment<CallCardPresenter, CallCardPr
         }
     }
 
+    public void setPrimaryPhoneNumber(String number, String location) {
+        // Set the number
+        if (TextUtils.isEmpty(number)) {
+            if (TextUtils.isEmpty(location)) {
+                mPhoneNumber.setText("");
+                mPhoneNumber.setVisibility(View.GONE);
+            } else {
+                mPhoneNumber.setText(location);
+                mPhoneNumber.setVisibility(View.VISIBLE);
+                mPhoneNumber.setTextDirection(View.TEXT_DIRECTION_LTR);
+            }  
+        } else {
+            mPhoneNumber.setText(number);
+            mPhoneNumber.setVisibility(View.VISIBLE);
+            mPhoneNumber.setTextDirection(View.TEXT_DIRECTION_LTR);
+        }
+    }
+
+    public void setPrimaryLabel(String label, String location) {
+        if (!TextUtils.isEmpty(label)) {
+            if (!TextUtils.isEmpty(location)) {
+                mNumberLabel.setText(label + "  " +location);
+            } else {
+                mNumberLabel.setText(label);
+            }
+            mNumberLabel.setVisibility(View.VISIBLE);
+        } else {
+            mNumberLabel.setVisibility(View.GONE);
+        }
+
+    }
+
+
     @Override
     public void setPrimary(String number, String name, boolean nameIsNumber, String label,
             Drawable photo, boolean isConference, boolean isGeneric, boolean isSipCall,
@@ -261,13 +297,25 @@ public class CallCardFragment extends BaseFragment<CallCardPresenter, CallCardPr
             nameIsNumber = false;
         }
 
-        setPrimaryPhoneNumber(number);
+        //setPrimaryPhoneNumber(number);
 
         // set the name field.
         setPrimaryName(name, nameIsNumber);
 
         // Set the label (Mobile, Work, etc)
-        setPrimaryLabel(label);
+        //setPrimaryLabel(label);
+        if (MoKeeUtils.isChineseLanguage() && !MoKeeUtils.isTWLanguage() && !TextUtils.isEmpty(number) || MoKeeUtils.isChineseLanguage() && !MoKeeUtils.isTWLanguage() && nameIsNumber) {
+            String location = PhoneLocation.getCityFromPhone(!nameIsNumber ? number : name);
+            setPrimaryPhoneNumber(!nameIsNumber ? number : "", location);
+            // Set the label (Mobile, Work, etc) and location
+            setPrimaryLabel(label, location);
+        } else {
+            setPrimaryPhoneNumber(number);
+            // Set the label (Mobile, Work, etc)
+            setPrimaryLabel(label);
+        }
+
+
 
         showCallTypeLabel(isSipCall, isForwarded);
         MSimTelephonyManager tm = MSimTelephonyManager.getDefault();
